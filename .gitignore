@@ -1,0 +1,14 @@
+# Google credentials — NUNCA subir
+credentials.json
+*.json.bak
+
+# Local environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (si lo usamos en el futuro)
+node_modules/

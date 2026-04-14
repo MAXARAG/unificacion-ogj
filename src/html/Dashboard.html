@@ -1,0 +1,123 @@
+<div id="module-dashboard" class="module active">
+  <div class="module-header">
+    <div>
+      <div class="module-title">Dashboard</div>
+      <div class="module-subtitle">Resumen general del sistema</div>
+    </div>
+    <div class="module-actions">
+      <button class="btn btn-ghost">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="module-body">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card amber">
+        <div class="kpi-label">Expedientes Activos</div>
+        <div class="kpi-value">142</div>
+        <div class="kpi-meta">↑ 3 nuevos esta semana</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">Audiencias Programadas</div>
+        <div class="kpi-value">18</div>
+        <div class="kpi-meta">Próxima: hoy 10:00</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Escritos Pendientes</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-meta">3 sin asignar</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Casos Nuevos Hoy</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-meta">Ingresados a Mesa</div>
+      </div>
+    </div>
+
+    <!-- Alertas + Próximas Audiencias -->
+    <div class="grid-2">
+
+      <!-- Alertas -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">⚡ Alertas del Sistema</span>
+          <span class="badge badge-urgente">3 activas</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item urgente">
+              <div class="alert-dot"></div>
+              <div class="alert-text">Audiencia programada para hoy — Exp. 2024-0451</div>
+              <div class="alert-time">10:00</div>
+            </div>
+            <div class="alert-item aviso">
+              <div class="alert-dot"></div>
+              <div class="alert-text">Vencimiento de plazo — Exp. 2024-0388</div>
+              <div class="alert-time">mañana</div>
+            </div>
+            <div class="alert-item info">
+              <div class="alert-dot"></div>
+              <div class="alert-text">3 escritos sin asignar en Mesa de Entradas</div>
+              <div class="alert-time"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximas audiencias -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📅 Próximas Audiencias</span>
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;" onclick="navigateTo('mesa-entradas')">Ver todas</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Expediente</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="id-cell">2024-0451</td>
+                <td>Hoy 10:30</td>
+                <td>Oral</td>
+                <td><span class="badge badge-confirmada">Confirmada</span></td>
+              </tr>
+              <tr>
+                <td class="id-cell">2024-0312</td>
+                <td>Hoy 09:00</td>
+                <td>Preliminar</td>
+                <td><span class="badge badge-confirmada">Confirmada</span></td>
+              </tr>
+              <tr>
+                <td class="id-cell">2024-0280</td>
+                <td>16/04 11:00</td>
+                <td>Sentencia</td>
+                <td><span class="badge badge-pendiente">Pendiente</span></td>
+              </tr>
+              <tr>
+                <td class="id-cell">2024-0499</td>
+                <td>17/04 09:30</td>
+                <td>Preliminar</td>
+                <td><span class="badge badge-pendiente">Pendiente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,23 @@
+{
+  "scriptId": "REEMPLAZAR_CON_TU_SCRIPT_ID",
+  "rootDir": ".",
+  "filePushOrder": [
+    "appsscript.json",
+    "Code.gs",
+    "src/html/Sidebar.html",
+    "src/html/Dashboard.html",
+    "src/html/MesaEntradas.html",
+    "src/html/Agenda.html",
+    "src/html/Notificaciones.html",
+    "src/html/Audiencias.html",
+    "src/html/GestionCasos.html",
+    "src/html/GestorJuridico.html",
+    "src/html/Juicios.html",
+    "src/html/Ejecucion.html",
+    "src/html/Expedientes.html",
+    "src/html/Cronograma.html",
+    "src/html/Licencias.html",
+    "assets/styles.css",
+    "src/js/ClientLogic.js"
+  ]
+}

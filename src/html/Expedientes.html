@@ -1,0 +1,87 @@
+<div id="module-expedientes" class="module">
+  <div class="module-header">
+    <div>
+      <div class="module-title">Expedientes e Imputados</div>
+      <div class="module-subtitle">Registro centralizado de causas</div>
+    </div>
+    <div class="module-actions">
+      <button class="btn btn-primary">+ Expediente</button>
+    </div>
+  </div>
+  <div class="module-body">
+    <div class="card">
+      <div class="filters-bar" style="border:none; padding:14px 20px 0;">
+        <input class="filter-input" type="text" placeholder="Buscar por ID o imputado..." style="flex:1; max-width:300px;">
+        <select class="filter-select">
+          <option value="">Todos los estados</option>
+          <option>Activo</option>
+          <option>Pendiente</option>
+          <option>Cerrado</option>
+        </select>
+        <select class="filter-select">
+          <option value="">Todos los jueces</option>
+          <option>Fernández</option>
+          <option>Castro</option>
+          <option>López</option>
+          <option>Morales</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="margin-top:12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Expediente</th>
+              <th>Imputado</th>
+              <th>Delito</th>
+              <th>Juez</th>
+              <th>Fecha ingreso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="id-cell">2024-0312</td>
+              <td>Juan Pérez</td>
+              <td>Robo calificado</td>
+              <td>Fernández</td>
+              <td>10/01/2024</td>
+              <td><span class="badge badge-activo">Activo</span></td>
+            </tr>
+            <tr>
+              <td class="id-cell">2024-0355</td>
+              <td>Carlos Sánchez</td>
+              <td>Estafa</td>
+              <td>Castro</td>
+              <td>15/01/2024</td>
+              <td><span class="badge badge-activo">Activo</span></td>
+            </tr>
+            <tr>
+              <td class="id-cell">2024-0388</td>
+              <td>Ana González</td>
+              <td>Lesiones graves</td>
+              <td>López</td>
+              <td>22/01/2024</td>
+              <td><span class="badge badge-activo">Activo</span></td>
+            </tr>
+            <tr>
+              <td class="id-cell">2024-0451</td>
+              <td>Roberto Díaz</td>
+              <td>Homicidio culposo</td>
+              <td>Fernández</td>
+              <td>05/02/2024</td>
+              <td><span class="badge badge-activo">Activo</span></td>
+            </tr>
+            <tr>
+              <td class="id-cell">2024-0499</td>
+              <td>María Rodríguez</td>
+              <td>Encubrimiento</td>
+              <td>Morales</td>
+              <td>12/02/2024</td>
+              <td><span class="badge badge-pendiente">Pendiente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

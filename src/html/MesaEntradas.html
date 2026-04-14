@@ -1,0 +1,178 @@
+<div id="module-mesa-entradas" class="module">
+  <div class="module-header">
+    <div>
+      <div class="module-title">Mesa de Entradas</div>
+      <div class="module-subtitle">Gestión de escritos y audiencias</div>
+    </div>
+    <div class="module-actions">
+      <button class="btn btn-primary">+ Nuevo</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab-item active" data-tab="me-escritos">Escritos</div>
+    <div class="tab-item" data-tab="me-audiencias">Audiencias</div>
+  </div>
+
+  <!-- TAB: ESCRITOS -->
+  <div id="me-escritos" class="tab-panel active">
+    <div class="filters-bar">
+      <input class="filter-input" type="text" placeholder="Buscar escrito..." style="flex:1; max-width:260px;">
+      <select class="filter-select">
+        <option value="">Todos los estados</option>
+        <option>Pendiente</option>
+        <option>Asignado</option>
+        <option>Resuelto</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Remitente</th>
+            <th>Asunto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id-cell">ESC-2024-001</td>
+            <td>14/04/2024</td>
+            <td>Dr. García</td>
+            <td>Solicitud de prórroga</td>
+            <td><span class="badge badge-pendiente">Pendiente</span></td>
+            <td><button class="btn-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button></td>
+          </tr>
+          <tr>
+            <td class="id-cell">ESC-2024-002</td>
+            <td>14/04/2024</td>
+            <td>Dra. Martínez</td>
+            <td>Presentación de pruebas</td>
+            <td><span class="badge badge-asignado">Asignado</span></td>
+            <td><button class="btn-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button></td>
+          </tr>
+          <tr>
+            <td class="id-cell">ESC-2024-003</td>
+            <td>13/04/2024</td>
+            <td>Dr. López</td>
+            <td>Recurso de apelación</td>
+            <td><span class="badge badge-resuelto">Resuelto</span></td>
+            <td><button class="btn-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button></td>
+          </tr>
+          <tr>
+            <td class="id-cell">ESC-2024-004</td>
+            <td>13/04/2024</td>
+            <td>Dra. Rodríguez</td>
+            <td>Informe pericial</td>
+            <td><span class="badge badge-pendiente">Pendiente</span></td>
+            <td><button class="btn-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button></td>
+          </tr>
+          <tr>
+            <td class="id-cell">ESC-2024-005</td>
+            <td>12/04/2024</td>
+            <td>Dr. Torres</td>
+            <td>Notificación de sentencia</td>
+            <td><span class="badge badge-asignado">Asignado</span></td>
+            <td><button class="btn-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: AUDIENCIAS -->
+  <div id="me-audiencias" class="tab-panel">
+    <div class="filters-bar">
+      <input class="filter-input" type="text" placeholder="Buscar por causa..." style="flex:1; max-width:260px;">
+      <select class="filter-select">
+        <option value="">Todos los tipos</option>
+        <option>Preliminar</option>
+        <option>Oral</option>
+        <option>Sentencia</option>
+        <option>Apelación</option>
+      </select>
+      <select class="filter-select">
+        <option value="">Todos los estados</option>
+        <option>Confirmada</option>
+        <option>Pendiente</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Causa</th>
+            <th>Tipo</th>
+            <th>Sala</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id-cell">AUD-2024-018</td>
+            <td>15/04/2024</td>
+            <td>09:00</td>
+            <td class="id-cell">2024-0312</td>
+            <td>Preliminar</td>
+            <td>3</td>
+            <td><span class="badge badge-confirmada">Confirmada</span></td>
+          </tr>
+          <tr>
+            <td class="id-cell">AUD-2024-019</td>
+            <td>15/04/2024</td>
+            <td>10:30</td>
+            <td class="id-cell">2024-0451</td>
+            <td>Oral</td>
+            <td>1</td>
+            <td><span class="badge badge-confirmada">Confirmada</span></td>
+          </tr>
+          <tr>
+            <td class="id-cell">AUD-2024-020</td>
+            <td>16/04/2024</td>
+            <td>11:00</td>
+            <td class="id-cell">2024-0280</td>
+            <td>Sentencia</td>
+            <td>2</td>
+            <td><span class="badge badge-pendiente">Pendiente</span></td>
+          </tr>
+          <tr>
+            <td class="id-cell">AUD-2024-021</td>
+            <td>17/04/2024</td>
+            <td>09:30</td>
+            <td class="id-cell">2024-0499</td>
+            <td>Preliminar</td>
+            <td>4</td>
+            <td><span class="badge badge-pendiente">Pendiente</span></td>
+          </tr>
+          <tr>
+            <td class="id-cell">AUD-2024-022</td>
+            <td>18/04/2024</td>
+            <td>14:00</td>
+            <td class="id-cell">2024-0355</td>
+            <td>Apelación</td>
+            <td>1</td>
+            <td><span class="badge badge-pendiente">Pendiente</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
