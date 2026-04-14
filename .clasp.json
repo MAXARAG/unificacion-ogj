@@ -1,7 +1,7 @@
 {
-  "scriptId": "REEMPLAZAR_CON_TU_SCRIPT_ID",
+  "scriptId": "1u2jhPmLxzG631zd2eqAag7DlteTVQ2aef2d86VKSqOdTADxulsKtuspv",
   "rootDir": ".",
-  "filePushOrder": [
+  "files": [
     "appsscript.json",
     "Code.gs",
     "src/html/Sidebar.html",
@@ -16,8 +16,6 @@
     "src/html/Ejecucion.html",
     "src/html/Expedientes.html",
     "src/html/Cronograma.html",
-    "src/html/Licencias.html",
-    "assets/styles.css",
-    "src/js/ClientLogic.js"
+    "src/html/Licencias.html"
   ]
 }
