@@ -12,8 +12,7 @@
    ══════════════════════════════════════════════════════ */
 :root {
   --sidebar-bg:        #0b0f18;
-  --sidebar-width:     240px;
-  --sidebar-icon-width:52px;
+  --sidebar-width:     200px;
   --sidebar-border:    #1a2235;
   --accent:            #c9973a;
   --accent-light:      #e8b96a;
@@ -23,25 +22,25 @@
   --nav-active-text:   #e8b96a;
   --section-label:     #374253;
 
-  --content-bg:        #dde3ea;
-  --card-bg:           #f0f3f6;
-  --card-bg-alt:       #e8ecf0;
-  --card-border:       #cdd4db;
-  --card-shadow:       0 1px 3px rgba(0,0,0,0.10), 0 4px 14px rgba(0,0,0,0.06);
+  --content-bg:        #cfd8e0;
+  --card-bg:           #edf1f5;
+  --card-bg-alt:       #e4eaf0;
+  --card-border:       #9aafc0;
+  --card-shadow:       0 1px 4px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.09);
 
   --text-primary:      #1a2332;
-  --text-secondary:    #4a5a6a;
-  --text-muted:        #7a8898;
+  --text-secondary:    #3d5068;
+  --text-muted:        #6a7f95;
 
-  --table-head-bg:     #dde3ea;
-  --table-row-even:    #f0f3f6;
-  --table-row-odd:     #e8ecf1;
-  --table-row-hover:   #dce3eb;
-  --table-border:      #c8d0d9;
+  --table-head-bg:     #cfd8e0;
+  --table-row-even:    #edf1f5;
+  --table-row-odd:     #e4eaf0;
+  --table-row-hover:   #d6dfe8;
+  --table-border:      #9aafc0;
 
-  --filter-bg:         #e4eaf0;
-  --input-bg:          #f5f7fa;
-  --module-header-bg:  #eaeff4;
+  --filter-bg:         #d8e0e8;
+  --input-bg:          #f3f6f9;
+  --module-header-bg:  #d8e2ea;
 
   --green:   #10b981;
   --red:     #ef4444;
@@ -131,15 +130,13 @@ body {
 
 /* ── Header ── */
 .sidebar-header {
-  padding: 18px 20px 16px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
+  overflow: hidden;
+  min-height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  overflow: hidden;
-  min-height: 64px;
 }
 
 .sidebar-logo {
@@ -164,25 +161,6 @@ body {
   text-transform: uppercase;
   margin-top: 3px;
 }
-
-/* ── Toggle ── */
-.sidebar-toggle {
-  width: 26px;
-  min-width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid var(--sidebar-border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--nav-text);
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-.sidebar-toggle:hover { background: rgba(255,255,255,0.06); color: var(--nav-text-hover); }
-.sidebar-toggle svg { transition: transform 0.22s ease; }
 
 /* ── Nav ── */
 .sidebar-nav {
@@ -210,7 +188,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 20px;
+  padding: 8px 18px;
   cursor: pointer;
   color: var(--nav-text);
   font-size: 13px;
@@ -239,9 +217,10 @@ body {
 .nav-item.active .icon { opacity: 1; }
 
 .nav-label {
-  transition: opacity 0.15s ease;
   overflow: hidden;
 }
+
+/* ── Footer ── */
 
 .nav-badge {
   margin-left: auto;
@@ -257,106 +236,15 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Tooltip al estar colapsado ── */
-.nav-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: calc(var(--sidebar-icon-width) + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: #1e2a3a;
-  color: #e2e8f0;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: var(--radius);
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  border: 1px solid var(--sidebar-border);
-  z-index: 200;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
 /* ── Footer ── */
 .sidebar-footer {
-  padding: 14px 20px;
+  padding: 14px 18px;
   border-top: 1px solid var(--sidebar-border);
   flex-shrink: 0;
   overflow: hidden;
   min-height: 44px;
   display: flex;
   align-items: center;
-}
-
-.sidebar-footer-text {
-  font-size: 10px;
-  color: var(--section-label);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  transition: opacity 0.15s ease;
-}
-
-/* ══════════════════════════════════════════════════════
-   SIDEBAR COLAPSADO — icon only (52px)
-   ══════════════════════════════════════════════════════ */
-#app.sidebar-collapsed #sidebar {
-  width: var(--sidebar-icon-width);
-  min-width: var(--sidebar-icon-width);
-}
-
-/* ocultar textos */
-#app.sidebar-collapsed .sidebar-logo,
-#app.sidebar-collapsed .nav-label,
-#app.sidebar-collapsed .nav-badge,
-#app.sidebar-collapsed .sidebar-footer-text {
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  overflow: hidden;
-}
-
-/* nav-section-label: colapsar completamente (el padding crea espacio muerto) */
-#app.sidebar-collapsed .nav-section-label {
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
-  overflow: hidden;
-  padding: 0;
-  height: 0;
-}
-
-/* centrar iconos */
-#app.sidebar-collapsed .nav-item {
-  padding: 10px 0;
-  justify-content: center;
-  gap: 0;
-  border-left: 2px solid transparent;
-  overflow: visible; /* necesario para que el tooltip ::after no sea recortado */
-}
-#app.sidebar-collapsed .nav-item.active {
-  border-left-color: var(--accent);
-}
-
-#app.sidebar-collapsed .sidebar-header {
-  justify-content: center;
-  padding: 18px 0 16px;
-}
-
-#app.sidebar-collapsed .sidebar-footer {
-  justify-content: center;
-  padding: 14px 0;
-}
-
-/* rotar flecha del toggle */
-#app.sidebar-collapsed .sidebar-toggle svg {
-  transform: rotate(180deg);
-}
-
-/* mostrar tooltips en modo colapsado */
-#app.sidebar-collapsed .nav-item:hover::after {
-  opacity: 1;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -393,19 +281,7 @@ body {
 }
 .theme-switch:hover { background: rgba(255,255,255,0.08); color: var(--nav-text-hover); }
 .theme-switch .theme-icon { font-size: 13px; flex-shrink: 0; }
-.theme-switch .theme-label { overflow: hidden; transition: opacity 0.15s ease, width 0.22s ease; }
-
-/* Colapsado: solo el ícono centrado */
-#app.sidebar-collapsed .theme-switch {
-  justify-content: center;
-  padding: 6px 0;
-  width: auto;
-  border: none;
-  background: transparent;
-}
-
-/* ── Sidebar expand btn — oculto, el toggle del header maneja expand/collapse ── */
-.sidebar-expand-btn { display: none !important; }
+.theme-switch .theme-label { overflow: hidden; }
 
 /* ══════════════════════════════════════════════════════
    CONTENT AREA
@@ -430,21 +306,21 @@ body {
 
 .module-header {
   background: var(--module-header-bg);
-  border-bottom: 1px solid var(--card-border);
-  padding: 18px 28px;
+  border-bottom: 2px solid var(--card-border);
+  padding: 16px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 10;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
   transition: background 0.25s ease;
 }
 
 .module-title {
   font-family: 'Playfair Display', serif;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -456,7 +332,7 @@ body {
 }
 
 .module-actions { display: flex; gap: 8px; align-items: center; }
-.module-body { padding: 24px 28px; }
+.module-body { padding: 20px 24px; }
 
 /* ══════════════════════════════════════════════════════
    CARDS
@@ -471,7 +347,7 @@ body {
 }
 
 .card-header {
-  padding: 14px 20px 12px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -496,7 +372,7 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  padding: 16px 18px;
   box-shadow: var(--card-shadow);
   position: relative;
   overflow: hidden;
@@ -507,7 +383,7 @@ body {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 3px;
+  height: 4px;
 }
 
 .kpi-card.amber::after  { background: var(--accent); }
@@ -553,9 +429,9 @@ thead th {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-secondary);
-  padding: 11px 16px;
+  padding: 10px 14px;
   text-align: left;
-  border-bottom: 2px solid var(--card-border);
+  border-bottom: 2px solid var(--table-border);
   transition: background 0.25s ease;
 }
 
@@ -564,7 +440,7 @@ tbody tr:nth-child(even) td { background: var(--table-row-even); }
 tbody tr:nth-child(odd)  td { background: var(--table-row-odd); }
 
 tbody td {
-  padding: 11px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--table-border);
   color: var(--text-primary);
   vertical-align: middle;
@@ -672,8 +548,8 @@ body.dark .badge-sistema    { background: #2e1065; color: #a78bfa; }
 .tabs {
   display: flex;
   gap: 2px;
-  border-bottom: 1px solid var(--card-border);
-  padding: 0 20px;
+  border-bottom: 2px solid var(--card-border);
+  padding: 0 18px;
   background: var(--module-header-bg);
   transition: background 0.25s ease;
 }
@@ -702,7 +578,7 @@ body.dark .badge-sistema    { background: #2e1065; color: #a78bfa; }
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px 20px;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--card-border);
   background: var(--filter-bg);
   flex-wrap: wrap;
