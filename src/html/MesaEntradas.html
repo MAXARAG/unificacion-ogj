@@ -6,13 +6,6 @@
       <div class="module-title">Mesa de Entradas</div>
       <div class="module-subtitle">Escritos · Workflow · Registro</div>
     </div>
-    <div class="module-actions">
-      <button class="btn btn-ghost">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar
-      </button>
-      <button class="btn btn-primary">+ Nuevo ingreso</button>
-    </div>
   </div>
 
   <!-- ── KPI STRIP ── -->
@@ -83,7 +76,7 @@
             <th>ID</th>
             <th>CUIJ</th>
             <th>Carátula</th>
-            <th>Tipo objeto</th>
+            <th>Tipo Solicitud</th>
             <th>Estado</th>
             <th></th>
           </tr>
@@ -281,18 +274,29 @@
       <div class="me-drawer-section-title">Clasificación</div>
       <div class="me-drawer-grid">
         <div class="me-drawer-field">
-          <span class="me-drawer-label">Tipo remitente</span>
-          <span class="me-drawer-val" id="dd-tipo-remitente">—</span>
+          <span class="me-drawer-label">Tipo Solicitante</span>
+          <span class="me-drawer-val" id="dd-tipo-solicitante">—</span>
         </div>
         <div class="me-drawer-field">
-          <span class="me-drawer-label">Tipo objeto</span>
-          <span class="me-drawer-val" id="dd-tipo-objeto">—</span>
+          <span class="me-drawer-label">Tipo Solicitud</span>
+          <span class="me-drawer-val" id="dd-tipo-solicitud">—</span>
         </div>
         <div class="me-drawer-field">
           <span class="me-drawer-label">Trámite</span>
           <span class="me-drawer-val" id="dd-tramite">—</span>
         </div>
+        <div class="me-drawer-field">
+          <span class="me-drawer-label">Estado de legajo</span>
+          <span class="me-drawer-val" id="dd-estado-legajo">—</span>
+        </div>
       </div>
+    </div>
+
+    <div class="me-drawer-section">
+      <div class="me-drawer-section-title me-collapsible" data-target="dd-info-adicional-body" style="cursor:pointer;">
+        <span class="me-collapsible-icon">▶</span> Información adicional
+      </div>
+      <div class="me-drawer-obs" id="dd-info-adicional-body" style="display:none;">—</div>
     </div>
 
     <div class="me-drawer-section">
@@ -317,12 +321,16 @@
       <div class="me-drawer-section-title">Responsables</div>
       <div class="me-drawer-grid">
         <div class="me-drawer-field">
-          <span class="me-drawer-label">Ingresó</span>
-          <span class="me-drawer-val" id="dd-usuario-ingresa">—</span>
+          <span class="me-drawer-label">Usuario</span>
+          <span class="me-drawer-val" id="dd-usuario">—</span>
         </div>
         <div class="me-drawer-field">
-          <span class="me-drawer-label">Ejecuta</span>
-          <span class="me-drawer-val" id="dd-usuario-ejecuta">—</span>
+          <span class="me-drawer-label">Usuario Trámite</span>
+          <span class="me-drawer-val" id="dd-usuario-tramite">—</span>
+        </div>
+        <div class="me-drawer-field">
+          <span class="me-drawer-label">Timestamp Trámite</span>
+          <span class="me-drawer-val" id="dd-timestamp-tramite">—</span>
         </div>
       </div>
     </div>
@@ -340,8 +348,10 @@
     </div>
 
     <div class="me-drawer-section">
-      <div class="me-drawer-section-title">Timeline</div>
-      <div class="me-timeline" id="dd-timeline"></div>
+      <div class="me-drawer-section-title">Vía</div>
+      <div class="me-drawer-field">
+        <span class="me-drawer-val" id="dd-via">—</span>
+      </div>
     </div>
 
   </div>
