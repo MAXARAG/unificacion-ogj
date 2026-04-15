@@ -1,74 +1,312 @@
 <div id="module-agenda" class="module">
+
+  <!-- ── HEADER ── -->
   <div class="module-header">
     <div>
       <div class="module-title">Agenda</div>
-      <div class="module-subtitle">Eventos y vencimientos programados</div>
-    </div>
-    <div class="module-actions">
-      <button class="btn btn-primary">+ Evento</button>
+      <div class="module-subtitle">Tablero de control · Pre-agendamiento y Agendamiento</div>
     </div>
   </div>
-  <div class="module-body">
-    <div class="card">
-      <div class="filters-bar" style="border:none; padding: 14px 20px 0;">
-        <input class="filter-input" type="date" value="2024-04-14" style="width:160px;">
-        <select class="filter-select">
-          <option>Todos los eventos</option>
-          <option>Audiencias</option>
-          <option>Vencimientos</option>
-          <option>Pericias</option>
-        </select>
+
+  <!-- ── TAB BAR ── -->
+  <div class="agenda-tab-bar">
+    <button class="agenda-tab active" data-agenda-tab="pre">
+      <span class="agenda-tab-dot agenda-tab-dot--pending"></span>
+      Pre-agendamiento
+    </button>
+    <button class="agenda-tab" data-agenda-tab="ag">
+      <span class="agenda-tab-dot agenda-tab-dot--action"></span>
+      Agendamiento
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       PANEL 1 — PRE-AGENDAMIENTO
+       Solo lectura · sin drawer
+  ══════════════════════════════════════ -->
+  <div class="agenda-tab-panel agenda-section" id="agenda-panel-pre">
+
+    <!-- SOL_PENDIENTES — arriba -->
+    <div class="agenda-col">
+      <div class="agenda-col-header">
+        <div class="agenda-col-header-left">
+          <span class="agenda-col-type agenda-col-type--solicitud">S</span>
+          <span class="agenda-col-title">Solicitudes</span>
+        </div>
+        <span class="agenda-col-count agenda-col-count--pending" id="agenda-count-pre-solicitudes">—</span>
       </div>
-      <div class="table-wrapper" style="margin-top:12px;">
-        <table>
+      <div class="agenda-col-filters">
+        <input type="text" id="agenda-pre-sol-search" class="filter-input"
+               placeholder="Buscar…" style="flex:1;min-width:100px;max-width:220px;">
+        <input type="date" id="agenda-pre-sol-desde" class="filter-input" title="Desde">
+        <input type="date" id="agenda-pre-sol-hasta" class="filter-input" title="Hasta">
+        <button class="btn btn-ghost agenda-btn-hoy" id="agenda-pre-sol-hoy">Hoy</button>
+        <div id="agenda-pre-sol-pills" class="agenda-pills-group"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="agenda-table">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Evento</th>
-              <th>Expediente</th>
-              <th>Responsable</th>
+              <th>ID</th>
+              <th>Fecha / Hora</th>
+              <th>CUIJ</th>
+              <th>Carátula</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>14/04/2024</td>
-              <td><strong>09:00</strong></td>
-              <td>Audiencia preliminar</td>
-              <td class="id-cell">2024-0312</td>
-              <td>Juez Fernández</td>
-            </tr>
-            <tr>
-              <td>14/04/2024</td>
-              <td><strong>11:30</strong></td>
-              <td>Vencimiento de plazo</td>
-              <td class="id-cell">2024-0388</td>
-              <td>Sec. López</td>
-            </tr>
-            <tr>
-              <td>15/04/2024</td>
-              <td><strong>09:00</strong></td>
-              <td>Audiencia oral</td>
-              <td class="id-cell">2024-0451</td>
-              <td>Juez Fernández</td>
-            </tr>
-            <tr>
-              <td>16/04/2024</td>
-              <td><strong>10:00</strong></td>
-              <td>Dictado de sentencia</td>
-              <td class="id-cell">2024-0280</td>
-              <td>Juez Castro</td>
-            </tr>
-            <tr>
-              <td>17/04/2024</td>
-              <td><strong>15:00</strong></td>
-              <td>Pericia psicológica</td>
-              <td class="id-cell">2024-0499</td>
-              <td>Perito Gómez</td>
-            </tr>
+          <tbody id="agenda-list-pre-solicitudes">
+            <tr><td colspan="4" class="agenda-loading">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
-  </div>
+
+    <!-- ESC_PENDIENTES — abajo -->
+    <div class="agenda-col">
+      <div class="agenda-col-header">
+        <div class="agenda-col-header-left">
+          <span class="agenda-col-type agenda-col-type--escrito">E</span>
+          <span class="agenda-col-title">Escritos</span>
+        </div>
+        <span class="agenda-col-count agenda-col-count--pending" id="agenda-count-pre-escritos">—</span>
+      </div>
+      <div class="agenda-col-filters">
+        <input type="text" id="agenda-pre-esc-search" class="filter-input"
+               placeholder="Buscar…" style="flex:1;min-width:100px;max-width:220px;">
+        <input type="date" id="agenda-pre-esc-desde" class="filter-input" title="Desde">
+        <input type="date" id="agenda-pre-esc-hasta" class="filter-input" title="Hasta">
+        <button class="btn btn-ghost agenda-btn-hoy" id="agenda-pre-esc-hoy">Hoy</button>
+        <div id="agenda-pre-esc-pills" class="agenda-pills-group"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="agenda-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha / Hora</th>
+              <th>CUIJ</th>
+              <th>Carátula</th>
+            </tr>
+          </thead>
+          <tbody id="agenda-list-pre-escritos">
+            <tr><td colspan="4" class="agenda-loading">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /agenda-panel-pre -->
+
+  <!-- ══════════════════════════════════════
+       PANEL 2 — AGENDAMIENTO
+       Solo lectura · click abre drawer (solo filas agendadas)
+  ══════════════════════════════════════ -->
+  <div class="agenda-tab-panel agenda-section" id="agenda-panel-ag" style="display:none">
+
+    <!-- SOL_AGENDADOS — arriba -->
+    <div class="agenda-col">
+      <div class="agenda-col-header">
+        <div class="agenda-col-header-left">
+          <span class="agenda-col-type agenda-col-type--solicitud">S</span>
+          <span class="agenda-col-title">Solicitudes</span>
+        </div>
+        <span class="agenda-col-count agenda-col-count--action" id="agenda-count-ag-solicitudes">—</span>
+      </div>
+      <div class="agenda-col-filters">
+        <input type="text" id="agenda-ag-sol-search" class="filter-input"
+               placeholder="Buscar…" style="flex:1;min-width:100px;max-width:220px;">
+        <input type="date" id="agenda-ag-sol-desde" class="filter-input" title="Desde">
+        <input type="date" id="agenda-ag-sol-hasta" class="filter-input" title="Hasta">
+        <button class="btn btn-ghost agenda-btn-hoy" id="agenda-ag-sol-hoy">Hoy</button>
+        <div id="agenda-ag-sol-pills" class="agenda-pills-group"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="agenda-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ingreso</th>
+              <th>CUIJ</th>
+              <th>Carátula</th>
+              <th>Tipo</th>
+              <th class="agenda-th-icon" title="Zoom">🔗</th>
+              <th class="agenda-th-icon" title="Agendada">Ag</th>
+              <th class="agenda-th-icon" title="Cancelada">Can</th>
+              <th class="agenda-th-icon" title="Re sorteada">Res</th>
+            </tr>
+          </thead>
+          <tbody id="agenda-list-ag-solicitudes">
+            <tr><td colspan="9" class="agenda-loading">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ESC_AGENDADOS — abajo -->
+    <div class="agenda-col">
+      <div class="agenda-col-header">
+        <div class="agenda-col-header-left">
+          <span class="agenda-col-type agenda-col-type--escrito">E</span>
+          <span class="agenda-col-title">Escritos</span>
+        </div>
+        <span class="agenda-col-count agenda-col-count--action" id="agenda-count-ag-escritos">—</span>
+      </div>
+      <div class="agenda-col-filters">
+        <input type="text" id="agenda-ag-esc-search" class="filter-input"
+               placeholder="Buscar…" style="flex:1;min-width:100px;max-width:220px;">
+        <input type="date" id="agenda-ag-esc-desde" class="filter-input" title="Desde">
+        <input type="date" id="agenda-ag-esc-hasta" class="filter-input" title="Hasta">
+        <button class="btn btn-ghost agenda-btn-hoy" id="agenda-ag-esc-hoy">Hoy</button>
+        <div id="agenda-ag-esc-pills" class="agenda-pills-group"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="agenda-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ingreso</th>
+              <th>CUIJ</th>
+              <th>Carátula</th>
+              <th>Tipo</th>
+              <th class="agenda-th-icon" title="Zoom">🔗</th>
+              <th class="agenda-th-icon" title="Agendada">Ag</th>
+              <th class="agenda-th-icon" title="Cancelada">Can</th>
+              <th class="agenda-th-icon" title="Re sorteada">Res</th>
+            </tr>
+          </thead>
+          <tbody id="agenda-list-ag-escritos">
+            <tr><td colspan="9" class="agenda-loading">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /agenda-panel-ag -->
+
+  <!-- ══════════════════════════════════════
+       DRAWER — Agendamiento (solo lectura)
+  ══════════════════════════════════════ -->
+  <div id="agenda-overlay" class="me-overlay"></div>
+
+  <div id="agenda-drawer" class="me-drawer">
+    <div class="me-drawer-header">
+      <div>
+        <div class="me-drawer-id" id="agenda-drawer-id">—</div>
+        <div id="agenda-drawer-tipo-badge" style="margin-top:6px;"></div>
+      </div>
+      <button class="btn-icon" id="agenda-drawer-close" title="Cerrar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="me-drawer-body">
+
+      <!-- IDENTIFICACIÓN -->
+      <div class="me-drawer-section">
+        <div class="me-drawer-section-title">Identificación</div>
+        <div class="me-drawer-grid">
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">CUIJ</span>
+            <span class="me-drawer-val" id="agenda-dd-cuij">—</span>
+          </div>
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">Carátula</span>
+            <span class="me-drawer-val" id="agenda-dd-caratula">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDIENCIA -->
+      <div class="me-drawer-section">
+        <div class="me-drawer-section-title">Audiencia</div>
+        <div class="me-drawer-grid">
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">Tipo de Audiencia</span>
+            <span class="me-drawer-val" id="agenda-dd-tipo-aud">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Sala</span>
+            <span class="me-drawer-val" id="agenda-dd-sala">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Fecha de Agendamiento</span>
+            <span class="me-drawer-val" id="agenda-dd-fecha">—</span>
+          </div>
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">Link Zoom</span>
+            <span class="me-drawer-val" id="agenda-dd-zoom">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTEGRANTES -->
+      <div class="me-drawer-section">
+        <div class="me-drawer-section-title">Integrantes</div>
+        <div class="me-drawer-grid">
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Juez</span>
+            <span class="me-drawer-val" id="agenda-dd-juez">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Fiscal</span>
+            <span class="me-drawer-val" id="agenda-dd-fiscal">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Defensa</span>
+            <span class="me-drawer-val" id="agenda-dd-defensa">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Querella</span>
+            <span class="me-drawer-val" id="agenda-dd-querella">—</span>
+          </div>
+          <div class="me-drawer-field me-drawer-field--full" id="agenda-dd-ei-section" style="display:none">
+            <span class="me-drawer-label">Equipo Interdisciplinario</span>
+            <span class="me-drawer-val">
+              <span class="badge" style="background:#d1fae5;color:#065f46;">Presente</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO -->
+      <div class="me-drawer-section">
+        <div class="me-drawer-section-title">Estado</div>
+        <div id="agenda-dd-estado-badge"></div>
+      </div>
+
+      <!-- CANCELACIÓN (condicional) -->
+      <div class="me-drawer-section" id="agenda-dd-cancelacion-section" style="display:none">
+        <div class="me-drawer-section-title">Cancelación</div>
+        <div class="me-drawer-grid">
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">Motivo</span>
+            <span class="me-drawer-val" id="agenda-dd-motivo-can">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Usuario</span>
+            <span class="me-drawer-val" id="agenda-dd-usuario-can">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RE SORTEO (condicional) -->
+      <div class="me-drawer-section" id="agenda-dd-resorteo-section" style="display:none">
+        <div class="me-drawer-section-title">Re sorteo</div>
+        <div class="me-drawer-grid">
+          <div class="me-drawer-field me-drawer-field--full">
+            <span class="me-drawer-label">Motivo</span>
+            <span class="me-drawer-val" id="agenda-dd-motivo-res">—</span>
+          </div>
+          <div class="me-drawer-field">
+            <span class="me-drawer-label">Usuario</span>
+            <span class="me-drawer-val" id="agenda-dd-usuario-res">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /me-drawer-body -->
+  </div><!-- /agenda-drawer -->
+
 </div>
