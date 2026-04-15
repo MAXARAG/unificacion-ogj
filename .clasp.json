@@ -5,6 +5,7 @@
     "appsscript.json",
     "Code.gs",
     "src/html/Sidebar.html",
+    "src/html/Styles.html",
     "src/html/Dashboard.html",
     "src/html/MesaEntradas.html",
     "src/html/Agenda.html",
