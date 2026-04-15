@@ -261,11 +261,14 @@ body {
 .nav-item::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: calc(var(--sidebar-icon-width) + 6px);
+  left: calc(var(--sidebar-icon-width) + 10px);
+  top: 50%;
+  transform: translateY(-50%);
   background: #1e2a3a;
   color: #e2e8f0;
-  font-size: 11.5px;
-  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
   border-radius: var(--radius);
   white-space: nowrap;
   pointer-events: none;
@@ -307,12 +310,21 @@ body {
 #app.sidebar-collapsed .sidebar-logo,
 #app.sidebar-collapsed .nav-label,
 #app.sidebar-collapsed .nav-badge,
-#app.sidebar-collapsed .nav-section-label,
 #app.sidebar-collapsed .sidebar-footer-text {
   opacity: 0;
   pointer-events: none;
   width: 0;
   overflow: hidden;
+}
+
+/* nav-section-label: colapsar completamente (el padding crea espacio muerto) */
+#app.sidebar-collapsed .nav-section-label {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  padding: 0;
+  height: 0;
 }
 
 /* centrar iconos */
@@ -321,6 +333,7 @@ body {
   justify-content: center;
   gap: 0;
   border-left: 2px solid transparent;
+  overflow: visible; /* necesario para que el tooltip ::after no sea recortado */
 }
 #app.sidebar-collapsed .nav-item.active {
   border-left-color: var(--accent);
@@ -391,27 +404,8 @@ body {
   background: transparent;
 }
 
-/* ── Sidebar expand btn (flotante, visible solo cuando colapsado) ── */
-.sidebar-expand-btn {
-  display: none;
-  position: fixed;
-  left: calc(var(--sidebar-icon-width) + 8px);
-  top: 19px;
-  width: 26px;
-  height: 26px;
-  align-items: center;
-  justify-content: center;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: var(--transition);
-  z-index: 100;
-  box-shadow: var(--card-shadow);
-}
-.sidebar-expand-btn:hover { background: var(--table-row-hover); color: var(--text-primary); }
-#app.sidebar-collapsed .sidebar-expand-btn { display: flex; }
+/* ── Sidebar expand btn — oculto, el toggle del header maneja expand/collapse ── */
+.sidebar-expand-btn { display: none !important; }
 
 /* ══════════════════════════════════════════════════════
    CONTENT AREA

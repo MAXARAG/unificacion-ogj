@@ -15,7 +15,7 @@
     <div class="sidebar-header">
       <div class="sidebar-logo">
         Portal OGJ
-        <span>Sistema de Gestión Jurídica</span>
+        <span>Sistema de Gestión Jurídica San Lorenzo</span>
       </div>
       <button class="sidebar-toggle" id="sidebarToggle" title="Ocultar sidebar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -216,16 +216,10 @@
 
   // ── SIDEBAR TOGGLE ──────────────────────────────────────────
   function initSidebarToggle() {
-    var app        = document.getElementById('app');
-    var btnCollapse = document.getElementById('sidebarToggle');
-    var btnExpand   = document.getElementById('sidebarExpand');
-
-    btnCollapse.addEventListener('click', function () {
-      app.classList.add('sidebar-collapsed');
-    });
-
-    btnExpand.addEventListener('click', function () {
-      app.classList.remove('sidebar-collapsed');
+    var app = document.getElementById('app');
+    var btn = document.getElementById('sidebarToggle');
+    btn.addEventListener('click', function () {
+      app.classList.toggle('sidebar-collapsed');
     });
   }
 
