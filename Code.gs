@@ -19,6 +19,110 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
+// ─── SHEET CONFIG ────────────────────────────────────────────────
+var SPREADSHEET_ID = '1o0ihdTyFvqKp_TaVEtwedUScPOGZtZyJZPFoVUartA8';
+var HOJA_ESCRITOS  = '.ESCRITOS';
+var HOJA_SOLICITUDES = '.SOLICITUDES';
+
+/**
+ * Lee toda la hoja .ESCRITOS y devuelve escritos + estados únicos + destinos únicos.
+ * Columnas: A(usuario) B(id) C(fecha) D(hora) E(origen) F(cuij) G(caratula)
+ *           H(tipoRemitente) K(tipoObjeto) L(usuarioEjecuta) M(tramite)
+ *           N(destino) O(estado) P(obs) Q(timestamps)
+ */
+function getEscritosData() {
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(HOJA_ESCRITOS);
+    var lastRow = sheet.getLastRow();
+
+    if (lastRow <= 1) {
+      return { escritos: [], estados: ['Pendientes', 'Finalizada'], destinos: [] };
+    }
+
+    // Fila 2 en adelante, columnas A:Q (17 cols)
+    var raw = sheet.getRange(2, 1, lastRow - 1, 17).getDisplayValues();
+
+    var estadosSet  = [];
+    var destinosSet = [];
+
+    var escritos = raw
+      .map(function(row) {
+        return {
+          usuario:       row[0],   // A
+          id:            row[1],   // B
+          fecha:         row[2],   // C
+          hora:          row[3],   // D
+          origen:        row[4],   // E
+          cuij:          row[5],   // F
+          caratula:      row[6],   // G
+          tipoRemitente: row[7],   // H
+          tipoObjeto:    row[10],  // K
+          usuarioEjecuta:row[11],  // L
+          tramite:       row[12],  // M
+          destino:       row[13],  // N
+          estado:        row[14],  // O
+          obs:           row[15],  // P
+          timestamps:    row[16]   // Q
+        };
+      })
+      .filter(function(e) { return e.id && e.id.trim(); }); // omite filas vacías
+
+    // Extraer únicos
+    escritos.forEach(function(e) {
+      if (e.estado  && estadosSet.indexOf(e.estado)   === -1) estadosSet.push(e.estado);
+      if (e.destino && destinosSet.indexOf(e.destino) === -1) destinosSet.push(e.destino);
+    });
+
+    if (estadosSet.length === 0) estadosSet = ['Pendientes', 'Finalizada'];
+
+return { escritos: escritos, estados: estadosSet, destinos: destinosSet };
+  } catch(err) {
+    return { error: err.message, escritos: [], estados: ['Pendientes', 'Finalizada'], destinos: [] };
+  }
+}
+
+/**
+ * Lee la hoja .SOLICITUDES 
+ * Columnas: A(usuario) B(id) C(fechaYHora) D(cuij) E(caratula) F(vencimiento) 
+ *          G(observaciones) H(estado) I(motivoRechazo) J(timestamp)
+ */
+function getSolicitudesData() {
+  try {
+    var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(HOJA_SOLICITUDES);
+    var lastRow = sheet.getLastRow();
+
+    if (lastRow <= 1) {
+      return { solicitudes: [], estados: [] };
+    }
+
+    // Columnas A:J (10 cols)
+    var raw = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
+
+    var solicitudes = raw
+      .map(function(row) {
+        return {
+          usuario:        row[0],   // A
+          id:             row[1],   // B
+          fechaYHora:     row[2],   // C (DD/MM/YYYY HH:MM)
+          cuij:           row[3],   // D
+          caratula:       row[4],   // E
+          vencimiento:    row[5],   // F
+          observaciones: row[6],   // G
+          estado:         row[7],   // H
+          motivoRechazo:  row[8],   // I
+          timestamp:     row[9]    // J
+        };
+      })
+      .filter(function(s) { return s.id && s.id.trim(); });
+
+    return { solicitudes: solicitudes };
+  } catch(err) {
+    return { error: err.message, solicitudes: [] };
+  }
+}
+
 // ─── MOCK DATA ───────────────────────────────────────────────────
 
 function getDashboardData() {
