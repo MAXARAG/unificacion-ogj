@@ -48,7 +48,7 @@
             </svg>
           </span>
           <span class="nav-label">Mesa de Entradas</span>
-          <span class="nav-badge">7</span>
+          <span class="nav-badge" id="badge-me">—</span>
         </div>
 
         <div class="nav-item" data-module="agenda" data-tooltip="Agenda">
@@ -70,7 +70,7 @@
             </svg>
           </span>
           <span class="nav-label">Notificaciones</span>
-          <span class="nav-badge">3</span>
+          <span class="nav-badge" id="badge-notif">—</span>
         </div>
 
         <div class="nav-item" data-module="audiencias" data-tooltip="Audiencias">
@@ -203,6 +203,11 @@
     var activeNav = document.querySelector('[data-module="' + moduleId + '"]');
     if (activeNav) activeNav.classList.add('active');
     document.getElementById('content').scrollTop = 0;
+
+    // Cargar agenda si es el módulo agenda
+    if (moduleId === 'agenda' && window.initAgendaModule) {
+      window.initAgendaModule();
+    }
   }
   window.navigateTo = navigateTo;
 
@@ -269,6 +274,30 @@
       localStorage.setItem('theme', dark ? 'dark' : 'light');
       updateThemeBtn(btn, dark);
     });
+  }
+
+  // ── BADGES — Cargo counts reales desde Sheets ─────────────
+  function initBadges() {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        var meBadge = document.getElementById('badge-me');
+        var notifBadge = document.getElementById('badge-notif');
+        if (data.error) {
+          if (meBadge) meBadge.textContent = '!';
+          if (notifBadge) notifBadge.textContent = '!';
+          return;
+        }
+        if (meBadge) meBadge.textContent = data.escritos > 0 ? data.escritos : '';
+        // Notificaciones = solicitudes pendientes
+        if (notifBadge) notifBadge.textContent = data.solicitudes > 0 ? data.solicitudes : '';
+      })
+      .withFailureHandler(function(err) {
+        var meBadge = document.getElementById('badge-me');
+        var notifBadge = document.getElementById('badge-notif');
+        if (meBadge) meBadge.textContent = '!';
+        if (notifBadge) notifBadge.textContent = '!';
+      })
+      .getPendingCounts();
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -339,7 +368,9 @@
       return;
     }
 
-escritos.forEach(function (e) {
+    var hoy = getHoy();
+
+    escritos.forEach(function (e) {
       var est = (e.estado || '').trim().toLowerCase();
 
       // Colores inline — ningún CSS los puede pisar
@@ -348,21 +379,24 @@ escritos.forEach(function (e) {
 
       var tr = document.createElement('tr');
       tr.className = 'me-row';
-      tr.dataset.id             = e.id             || '';
-      tr.dataset.status         = e.estado         || '';
-      tr.dataset.fecha          = e.fecha          || '';
-      tr.dataset.hora           = e.hora           || '';
-      tr.dataset.origen         = e.origen         || '';
-      tr.dataset.cuij           = e.cuij           || '';
-      tr.dataset.caratula       = e.caratula       || '';
-      tr.dataset.tipoRemitente  = e.tipoRemitente  || '';
-      tr.dataset.tipoObjeto     = e.tipoObjeto     || '';
-      tr.dataset.usuarioIngresa = e.usuario        || '';
-      tr.dataset.usuarioEjecuta = e.usuarioEjecuta || '';
-      tr.dataset.tramite        = e.tramite        || '';
-      tr.dataset.destino        = e.destino        || '';
-      tr.dataset.obs            = e.obs            || '';
-      tr.dataset.timestamps     = e.timestamps     || '[]';
+      tr.dataset.id              = e.id               || '';
+      tr.dataset.status          = e.estado           || '';
+      tr.dataset.fecha           = e.fecha            || '';
+      tr.dataset.hora            = e.hora             || '';
+      tr.dataset.usuario         = e.usuario          || '';
+      tr.dataset.origen          = e.origen           || '';
+      tr.dataset.cuij            = e.cuij            || '';
+      tr.dataset.caratula        = e.caratula         || '';
+      tr.dataset.tipoSolicitante = e.tipoSolicitante  || '';
+      tr.dataset.tipoSolicitud   = e.tipoSolicitud    || '';
+      tr.dataset.infoAdicional  = e.infoAdicional    || '';
+      tr.dataset.estadoLegajo   = e.estadoLegajo     || '';
+      tr.dataset.usuarioTramite = e.usuarioTramite   || '';
+      tr.dataset.tramite        = e.tramite          || '';
+      tr.dataset.destino        = e.destino          || '';
+      tr.dataset.via            = e.via              || '';
+      tr.dataset.obs             = e.obs              || '';
+      tr.dataset.timestampTramite = e.timestampTramite || '';
 
       tr.innerHTML =
         '<td>' + esc(e.usuario) + '</td>' +
@@ -370,7 +404,7 @@ escritos.forEach(function (e) {
         '<td>' + esc(e.id)      + '</td>' +
         '<td>' + esc(e.cuij)    + '</td>' +
         '<td style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(e.caratula) + '">' + esc(e.caratula) + '</td>' +
-        '<td>' + esc(e.tipoObjeto) + '</td>' +
+        '<td>' + esc(e.tipoSolicitud) + '</td>' +
         '<td><span class="badge" style="background:' + badgeBg + ';color:' + badgeTxt + ';">' + esc(e.estado) + '</span></td>' +
         '<td><button class="btn-icon me-open-btn">' +
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
@@ -533,22 +567,37 @@ escritos.forEach(function (e) {
     badgeEl.innerHTML = '<span class="badge" style="background:' + badgeBg + ';color:' + badgeTxt + ';">' + esc(badgeLabel) + '</span>';
 
     var set = function(id, val) { var el = document.getElementById(id); if(el) el.textContent = val || '—'; };
-    set('dd-cuij',          d.cuij);
-    set('dd-origen',        d.origen);
-    set('dd-caratula',      d.caratula);
-    set('dd-tipo-remitente',d.tipoRemitente);
-    set('dd-tipo-objeto',   d.tipoObjeto);
-    set('dd-tramite',       d.tramite);
-    set('dd-destino',       d.destino);
-    set('dd-usuario-ingresa',d.usuarioIngresa);
-    set('dd-usuario-ejecuta',d.usuarioEjecuta);
+    set('dd-cuij',             d.cuij);
+    set('dd-origen',           d.origen);
+    set('dd-caratula',         d.caratula);
+    set('dd-tipo-solicitante', d.tipoSolicitante);
+    set('dd-tipo-solicitud',  d.tipoSolicitud);
+    set('dd-tramite',          d.tramite);
+    set('dd-estado-legajo',    d.estadoLegajo || '—');
+    set('dd-destino',          d.destino);
+    set('dd-via',              d.via || '—');
+    set('dd-usuario',          d.usuario);
+    set('dd-usuario-tramite',  d.usuarioTramite);
+    set('dd-timestamp-tramite', d.timestampTramite);
 
-    // Fechas: ingreso (C+D) y resolución (Q), y cálculo de tiempo
+    // Info adicional (collapsible)
+    var infoAdic = d.infoAdicional || '';
+    var infoAdicEl = document.getElementById('dd-info-adicional-body');
+    if (infoAdicEl) {
+      infoAdicEl.textContent = infoAdic || '—';
+      infoAdicEl.style.display = infoAdic ? '' : 'none';
+      var toggleEl = infoAdicEl.previousElementSibling;
+      if (toggleEl && toggleEl.classList.contains('me-collapsible')) {
+        toggleEl.style.display = infoAdic ? '' : 'none';
+      }
+    }
+
+    // Fechas: ingreso (C+D) y timestamp-tramite (T), y cálculo de tiempo
     var fechas = { ingreso: '—', resolucion: '—' };
     var tiempo = { label: '—', urgente: false };
     
-    // Q tiene formato "DD/MM/YYYY HH:MM" o vacío
-    var timestampsQ = d.timestamps || '';
+    // TimestampTramite (T) tiene formato "DD/MM/YYYY HH:MM" o vacío
+    var timestampsT = d.timestampTramite || '';
     
     // Ingreso: fecha (C) + hora (D)
     if (d.fecha && d.hora) {
@@ -557,13 +606,13 @@ escritos.forEach(function (e) {
       fechas.ingreso = d.fecha;
     }
     
-    // Resolución: si Q tiene contenido
-    if (timestampsQ.trim()) {
-      fechas.resolucion = timestampsQ.trim();
+    // Resolución: si T tiene contenido
+    if (timestampsT.trim()) {
+      fechas.resolucion = timestampsT.trim();
     }
     
-    // Calcular tiempo: (C+D) inicio → (Q) fin o ahora
-    tiempo = calcularTiempo(d.fecha, d.hora, timestampsQ, d.status);
+    // Calcular tiempo: (C+D) inicio → (T) fin o ahora
+    tiempo = calcularTiempo(d.fecha, d.hora, timestampsT, d.status);
     
     set('dd-fecha-ingreso',    fechas.ingreso);
     set('dd-fecha-resolucion', fechas.resolucion);
@@ -584,29 +633,6 @@ escritos.forEach(function (e) {
       obsSection.style.display = 'none';
     }
 
-    // Timeline
-    var tlEl = document.getElementById('dd-timeline');
-    tlEl.innerHTML = '';
-    try {
-      var events = JSON.parse(d.timestamps || '[]');
-      if (Array.isArray(events) && events.length > 0) {
-        events.forEach(function (ev) {
-          var item = document.createElement('div');
-          item.className = 'me-tl-item';
-          item.innerHTML =
-            '<div class="me-tl-dot"></div>' +
-            '<div class="me-tl-content">' +
-              '<div class="me-tl-ev">'   + esc(ev.ev || '') + '</div>' +
-              '<div class="me-tl-meta">' + esc(ev.f  || '') + ' · ' + esc(ev.h || '') + (ev.u ? ' · ' + esc(ev.u) : '') + '</div>' +
-            '</div>';
-          tlEl.appendChild(item);
-        });
-      } else {
-        tlEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Sin eventos registrados</span>';
-      }
-    } catch (e) {
-      tlEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Sin eventos registrados</span>';
-    }
   }
 
   function openMeDrawer(row)  {
@@ -621,18 +647,35 @@ escritos.forEach(function (e) {
   }
 
   function initMeDrawer() {
-    // Event delegation sobre tbody — funciona con filas dinámicas
-    var tbody = document.getElementById('me-tbody');
-    if (tbody) {
-      tbody.addEventListener('click', function (e) {
+    // Event delegation sobre tabla completa — funciona con filas dinámicas
+    var tabla = document.getElementById('me-tabla');
+    if (tabla) {
+      tabla.addEventListener('click', function (e) {
+        var btn = e.target.closest('.me-open-btn');
         var row = e.target.closest('.me-row');
-        if (row) openMeDrawer(row);
+        if (btn || row) {
+          var targetRow = row || btn.closest('.me-row');
+          if (targetRow) openMeDrawer(targetRow);
+        }
       });
     }
     var closeBtn = document.getElementById('me-drawer-close');
     if (closeBtn) closeBtn.addEventListener('click', closeMeDrawer);
     var overlay  = document.getElementById('me-overlay');
     if (overlay)  overlay.addEventListener('click',  closeMeDrawer);
+
+    // Collapsible info adicional
+    var collapsible = document.querySelector('.me-collapsible');
+    if (collapsible) {
+      collapsible.addEventListener('click', function() {
+        var body = document.getElementById('dd-info-adicional-body');
+        if (body) {
+          var isOpen = body.style.display !== 'none';
+          body.style.display = isOpen ? 'none' : '';
+          collapsible.classList.toggle('open', !isOpen);
+        }
+      });
+    }
   }
 
   // ── Carga principal: llama al Sheet via GS y renderiza todo
@@ -744,7 +787,7 @@ escritos.forEach(function (e) {
 
     rows.forEach(function (row) {
       var d = row.dataset;
-      var est = (d.estado || '').trim().toLowerCase();
+      var est = (d.estado || '').trim().toLowerCase();  // normalizar a minúscula
       var fechaNorm = normalizarFecha(d.fecha);
 
       // Contar por estado
@@ -755,7 +798,7 @@ escritos.forEach(function (e) {
       if (est === 'revocada') counts.revocada++;
       if (est === 'anulada') counts.anulada++;
 
-      // Filtrar
+      // Filtrar — status ya viene en minúscula del data attribute
       var matchStatus = status === 'todos' || est === status;
       var matchFecha = true;
       if (desde && fechaNorm) matchFecha = fechaNorm >= desde;
@@ -780,7 +823,8 @@ escritos.forEach(function (e) {
 
   // ── Status pills de solicitudes
   function initSolStatusFilter() {
-    var statusBar = document.querySelector('.me-status-bar');
+    // Solo el status bar dentro del tab de solicitudes
+    var statusBar = document.querySelector('#me-solicitudes .me-status-bar');
     if (!statusBar) return;
     statusBar.addEventListener('click', function (e) {
       var btn = e.target.closest('.me-status-btn');
@@ -890,6 +934,7 @@ escritos.forEach(function (e) {
     initTabs();
     initFilters();
     initThemeSwitch();
+    initBadges();
     initMeStatusFilter();
     initMeFilters();
     initMeDrawer();
@@ -931,6 +976,559 @@ escritos.forEach(function (e) {
       dateEl.textContent = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
     }
   });
+
+  // ══════════════════════════════════════════════════════════════
+  //  AGENDA — 4 HOJAS (ESC_PENDIENTES, SOL_PENDIENTES, ESC_AGENDADOS, SOL_AGENDADOS)
+  //  Solo lectura · Pre sin drawer · Agendamiento con drawer
+  // ══════════════════════════════════════════════════════════════
+
+  var _agendaInitialized = false;
+
+  // ── MOCK DATA — para testing visual del drawer
+  var _agendaMockData = {
+    preEscritos: [
+      { id: 'PRE-001', fecha: '15/04/2026', hora: '09:00', cuij: 'CU-2026-00001', caratula: 'Gonzalez c/ Perez s/ Demanda laboral',           vencimiento: '20/04/2026' },
+      { id: 'PRE-002', fecha: '15/04/2026', hora: '09:30', cuij: 'CU-2026-00002', caratula: 'Martinez s/ Recurso de apelacion',                vencimiento: '22/04/2026' },
+      { id: 'PRE-003', fecha: '15/04/2026', hora: '14:00', cuij: 'CU-2026-00003', caratula: 'Lopez, Maria s/ Accion de amparo',                vencimiento: '18/04/2026' },
+      { id: 'PRE-004', fecha: '15/04/2026', hora: '15:30', cuij: 'CU-2026-00004', caratula: 'Fernandez c/ Banco XX s/ Juicio ejecutivo',       vencimiento: '30/04/2026' },
+      { id: 'PRE-005', fecha: '15/04/2026', hora: '10:00', cuij: 'CU-2026-00005', caratula: 'Rodriguez s/ Querella criminal',                  vencimiento: '16/04/2026' },
+    ],
+    preSolicitudes: [
+      { id: 'SOL-001', fecha: '15/04/2026', hora: '08:30', cuij: 'CU-2026-00101', caratula: 'Solicitud de medida cautelar - Empresa ABC',      vencimiento: '17/04/2026' },
+      { id: 'SOL-002', fecha: '15/04/2026', hora: '11:00', cuij: 'CU-2026-00102', caratula: 'Pedido de intimacion de pago',                    vencimiento: '19/04/2026' },
+      { id: 'SOL-003', fecha: '15/04/2026', hora: '16:00', cuij: 'CU-2026-00103', caratula: 'Solicitud de audiencia virtual',                  vencimiento: '25/04/2026' },
+    ],
+    agEscritos: [
+      { id: 'AGE-001', fechaIngreso: '15/04/2026', horaIngreso: '09:15', fecha: '22/04/2026', hora: '10:00', fechaAccion: '15/04/2026', horaAccion: '14:32',
+        cuij: 'CU-2026-00201', caratula: 'Diaz c/ Empresa Y s/ Indemnizacion',
+        tipoAudiencia: 'Oral', juez: 'Dr. Herrera', fiscal: 'Dr. Romero', defensa: 'Dra. Sosa', querella: '—',
+        equipoInterdisciplinario: false, sala: '3', linkZoom: 'https://zoom.us/j/123456789',
+        agendada: true,  cancelada: false, reSorteada: false, estado: 'Agendada',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: '', usuarioReSorteo: '' },
+      { id: 'AGE-002', fechaIngreso: '15/04/2026', horaIngreso: '11:00', fecha: '24/04/2026', hora: '11:30', fechaAccion: '15/04/2026', horaAccion: '09:10',
+        cuij: 'CU-2026-00202', caratula: 'Morales s/ Recurso de revision',
+        tipoAudiencia: 'Preliminar', juez: 'Dra. Vega', fiscal: 'Dr. Castro', defensa: 'Dr. Nuñez', querella: 'Dr. Ponce',
+        equipoInterdisciplinario: true, sala: '1', linkZoom: '',
+        agendada: true,  cancelada: true,  reSorteada: false, estado: 'Cancelada',
+        motivoCancelacion: 'Enfermedad del testigo principal', usuarioCancelacion: 'admin', motivoReSorteo: '', usuarioReSorteo: '' },
+      { id: 'AGE-003', fechaIngreso: '15/04/2026', horaIngreso: '08:45', fecha: '23/04/2026', hora: '09:00', fechaAccion: '15/04/2026', horaAccion: '16:05',
+        cuij: 'CU-2026-00203', caratula: 'Benitez c/ Cooperativa Z s/ Cobro de pesos',
+        tipoAudiencia: 'Sentencia', juez: 'Dr. Herrera', fiscal: 'Dra. Lagos', defensa: 'Dr. Funes', querella: '—',
+        equipoInterdisciplinario: false, sala: '2', linkZoom: 'https://zoom.us/j/987654321',
+        agendada: true,  cancelada: false, reSorteada: true,  estado: 'Re sorteada',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: 'Excusación del juez titular', usuarioReSorteo: 'admin' },
+      { id: 'AGE-004', fechaIngreso: '15/04/2026', horaIngreso: '10:30', fecha: '', hora: '', fechaAccion: '', horaAccion: '',
+        cuij: 'CU-2026-00204', caratula: 'Sanchez, Pedro s/ Exhorto',
+        tipoAudiencia: 'Cautelar', juez: 'Dra. Vega', fiscal: 'Dr. Romero', defensa: 'Dra. Sosa', querella: '—',
+        equipoInterdisciplinario: false, sala: '', linkZoom: '',
+        agendada: false, cancelada: false, reSorteada: false, estado: 'Pendiente',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: '', usuarioReSorteo: '' },
+      { id: 'AGE-005', fechaIngreso: '15/04/2026', horaIngreso: '15:20', fecha: '25/04/2026', hora: '10:30', fechaAccion: '15/04/2026', horaAccion: '11:00',
+        cuij: 'CU-2026-00205', caratula: 'Torres s/ Ejecucion de sentencia',
+        tipoAudiencia: 'Oral', juez: 'Dr. Herrera', fiscal: 'Dra. Lagos', defensa: 'Dra. Sosa', querella: 'Dra. Ponce',
+        equipoInterdisciplinario: true, sala: '1', linkZoom: 'https://zoom.us/j/555666777',
+        agendada: true,  cancelada: false, reSorteada: false, estado: 'Agendada',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: '', usuarioReSorteo: '' },
+    ],
+    agSolicitudes: [
+      { id: 'AGS-001', fechaIngreso: '15/04/2026', horaIngreso: '08:00', fecha: '21/04/2026', hora: '09:30', fechaAccion: '15/04/2026', horaAccion: '10:15',
+        cuij: 'CU-2026-00301', caratula: 'Solicitud de embargo preventivo',
+        tipoAudiencia: 'Cautelar', juez: 'Dr. Herrera', fiscal: 'Dr. Castro', defensa: 'Dr. Nuñez', querella: '—',
+        equipoInterdisciplinario: false, sala: '2', linkZoom: 'https://zoom.us/j/111222333',
+        agendada: true,  cancelada: false, reSorteada: false, estado: 'Agendada',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: '', usuarioReSorteo: '' },
+      { id: 'AGS-002', fechaIngreso: '15/04/2026', horaIngreso: '14:10', fecha: '22/04/2026', hora: '13:00', fechaAccion: '15/04/2026', horaAccion: '08:50',
+        cuij: 'CU-2026-00302', caratula: 'Pedido de habilitacion de ferias',
+        tipoAudiencia: 'Oral', juez: 'Dra. Vega', fiscal: 'Dra. Lagos', defensa: 'Dr. Funes', querella: 'Dra. Ponce',
+        equipoInterdisciplinario: true, sala: '1', linkZoom: '',
+        agendada: true,  cancelada: true,  reSorteada: false, estado: 'Cancelada',
+        motivoCancelacion: 'Falta de notificación a las partes', usuarioCancelacion: 'mesa1', motivoReSorteo: '', usuarioReSorteo: '' },
+      { id: 'AGS-003', fechaIngreso: '15/04/2026', horaIngreso: '09:30', fecha: '26/04/2026', hora: '10:00', fechaAccion: '15/04/2026', horaAccion: '13:45',
+        cuij: 'CU-2026-00303', caratula: 'Solicitud de certificacion de documentos',
+        tipoAudiencia: 'Informativa', juez: 'Dr. Herrera', fiscal: 'Dr. Romero', defensa: 'Dra. Sosa', querella: '—',
+        equipoInterdisciplinario: false, sala: '3', linkZoom: 'https://zoom.us/j/444555666',
+        agendada: true,  cancelada: false, reSorteada: true,  estado: 'Re sorteada',
+        motivoCancelacion: '', usuarioCancelacion: '', motivoReSorteo: 'Recusación del fiscal', usuarioReSorteo: 'mesa2' },
+    ]
+  };
+
+  // ── Renderiza tabla Pre (sin drawer, sin estado, sin vencimiento)
+  function renderAgendaPreTable(tbodyId, countId, items) {
+    var tbody  = document.getElementById(tbodyId);
+    var countEl = document.getElementById(countId);
+    if (!tbody) return;
+
+    if (!items || items.length === 0) {
+      if (countEl) countEl.textContent = '0';
+      tbody.innerHTML = '<tr><td colspan="4" class="agenda-empty">Sin registros</td></tr>';
+      return;
+    }
+
+    if (countEl) countEl.textContent = items.length;
+    tbody.innerHTML = items.map(function(item) {
+      var fn = normalizarFecha(item.fecha || '');
+      return (
+        '<tr class="agenda-pre-row"' +
+          ' data-id="'         + esc(item.id       || '') + '"' +
+          ' data-fecha="'      + esc(item.fecha     || '') + '"' +
+          ' data-fecha-norm="' + esc(fn)                   + '"' +
+          ' data-cuij="'       + esc(item.cuij      || '') + '"' +
+          ' data-caratula="'   + esc(item.caratula  || '') + '"' +
+          ' data-estado="'     + esc(item.estado    || '') + '"' +
+        '>' +
+          '<td class="id-cell">' + esc(item.id) + '</td>' +
+          '<td><span class="agenda-fecha">' + esc(item.fecha) + '</span><span class="agenda-hora">' + esc(item.hora) + '</span></td>' +
+          '<td class="agenda-cuij-cell">' + esc(item.cuij) + '</td>' +
+          '<td class="text-cell title-cell" title="' + esc(item.caratula) + '">' + esc(item.caratula) + '</td>' +
+        '</tr>'
+      );
+    }).join('');
+  }
+
+  // ── Renderiza tabla Agendamiento (9 cols — fila muestra fecha de INGRESO)
+  function renderAgendaAgTable(tbodyId, countId, items, tipo) {
+    var tbody   = document.getElementById(tbodyId);
+    var countEl = document.getElementById(countId);
+    if (!tbody) return;
+
+    if (!items || items.length === 0) {
+      if (countEl) countEl.textContent = '0';
+      tbody.innerHTML = '<tr><td colspan="9" class="agenda-empty">Sin registros</td></tr>';
+      return;
+    }
+
+    if (countEl) countEl.textContent = items.length;
+    tbody.innerHTML = items.map(function(item) {
+      var agendada   = item.agendada   === true;
+      var cancelada  = item.cancelada  === true;
+      var reSorteada = item.reSorteada === true;
+      var fn         = normalizarFecha(item.fechaIngreso || '');
+
+      // Estado derivado
+      var estadoLabel;
+      if      (cancelada)  estadoLabel = 'Cancelada';
+      else if (reSorteada) estadoLabel = 'Re sorteada';
+      else if (agendada)   estadoLabel = 'Agendada';
+      else                 estadoLabel = 'Pendiente';
+
+      // ID con asterisco si fue re sorteada
+      var idHtml = esc(item.id || '');
+      if (reSorteada) idHtml += '<span class="agenda-asterisco" title="Re sorteada">*</span>';
+
+      // Zoom
+      var zoomHtml = item.linkZoom
+        ? '<a class="agenda-zoom-link" href="' + esc(item.linkZoom) + '" target="_blank" rel="noopener" title="Abrir Zoom" onclick="event.stopPropagation()">↗</a>'
+        : '<span class="agenda-chk-off">—</span>';
+
+      // Checkboxes visuales
+      var chk = function(v) {
+        return v ? '<span class="agenda-chk-on">✓</span>' : '<span class="agenda-chk-off">—</span>';
+      };
+
+      var rowClass = 'agenda-ag-row' +
+        (agendada  ? ' agenda-ag-clickable' : '') +
+        (cancelada ? ' agenda-ag-cancelada' : '');
+
+      return (
+        '<tr class="' + rowClass + '"' +
+          ' data-id="'              + esc(item.id                  || '') + '"' +
+          ' data-fecha-ingreso="'   + esc(item.fechaIngreso         || '') + '"' +
+          ' data-hora-ingreso="'    + esc(item.horaIngreso          || '') + '"' +
+          ' data-fecha-norm="'      + esc(fn)                              + '"' +
+          ' data-fecha="'           + esc(item.fecha                || '') + '"' +
+          ' data-hora="'            + esc(item.hora                 || '') + '"' +
+          ' data-fecha-accion="'    + esc(item.fechaAccion          || '') + '"' +
+          ' data-hora-accion="'     + esc(item.horaAccion           || '') + '"' +
+          ' data-cuij="'            + esc(item.cuij                 || '') + '"' +
+          ' data-caratula="'        + esc(item.caratula             || '') + '"' +
+          ' data-tipo="'            + esc(tipo || item.tipo         || '') + '"' +
+          ' data-tipo-aud="'        + esc(item.tipoAudiencia        || '') + '"' +
+          ' data-juez="'            + esc(item.juez                 || '') + '"' +
+          ' data-fiscal="'          + esc(item.fiscal               || '') + '"' +
+          ' data-defensa="'         + esc(item.defensa              || '') + '"' +
+          ' data-querella="'        + esc(item.querella             || '') + '"' +
+          ' data-ei="'              + (item.equipoInterdisciplinario ? 'true' : 'false') + '"' +
+          ' data-sala="'            + esc(item.sala                 || '') + '"' +
+          ' data-zoom="'            + esc(item.linkZoom             || '') + '"' +
+          ' data-agendada="'        + (agendada   ? 'true' : 'false')      + '"' +
+          ' data-cancelada="'       + (cancelada  ? 'true' : 'false')      + '"' +
+          ' data-re-sorteada="'     + (reSorteada ? 'true' : 'false')      + '"' +
+          ' data-motivo-can="'      + esc(item.motivoCancelacion    || '') + '"' +
+          ' data-usuario-can="'     + esc(item.usuarioCancelacion   || '') + '"' +
+          ' data-motivo-res="'      + esc(item.motivoReSorteo       || '') + '"' +
+          ' data-usuario-res="'     + esc(item.usuarioReSorteo      || '') + '"' +
+          ' data-estado="'          + esc(estadoLabel)                     + '"' +
+        '>' +
+          '<td class="id-cell">' + idHtml + '</td>' +
+          '<td><span class="agenda-fecha">' + esc(item.fechaIngreso || '—') + '</span><span class="agenda-hora">' + esc(item.horaIngreso || '') + '</span></td>' +
+          '<td class="agenda-cuij-cell">' + esc(item.cuij || '—') + '</td>' +
+          '<td class="text-cell title-cell" title="' + esc(item.caratula) + '">' + esc(item.caratula) + '</td>' +
+          '<td>' + esc(item.tipoAudiencia || '—') + '</td>' +
+          '<td class="agenda-icon-cell">' + zoomHtml + '</td>' +
+          '<td class="agenda-icon-cell">' + chk(agendada)   + '</td>' +
+          '<td class="agenda-icon-cell">' + chk(cancelada)  + '</td>' +
+          '<td class="agenda-icon-cell">' + chk(reSorteada) + '</td>' +
+        '</tr>'
+      );
+    }).join('');
+  }
+
+  // ── Construye pills dinámicas a partir de los ítems de una sección
+  function buildAgendaPills(pillsId, items, applyFn) {
+    var container = document.getElementById(pillsId);
+    if (!container) return;
+
+    // Conteos por estado
+    var states = {};
+    (items || []).forEach(function(item) {
+      var s = (item.estado || '').trim();
+      if (s) states[s] = (states[s] || 0) + 1;
+    });
+
+    var total = (items || []).length;
+    var html  = '<button class="agenda-pill active" data-agenda-status="todos">' +
+                  'Todos <span class="agenda-pill-count">' + total + '</span>' +
+                '</button>';
+
+    Object.keys(states).sort().forEach(function(s) {
+      html += '<button class="agenda-pill" data-agenda-status="' + esc(s.toLowerCase()) + '">' +
+                esc(s) + ' <span class="agenda-pill-count">' + states[s] + '</span>' +
+              '</button>';
+    });
+
+    container.innerHTML = html;
+
+    // Un solo listener por contenedor (reemplaza el anterior junto con el innerHTML)
+    container.addEventListener('click', function(e) {
+      var pill = e.target.closest('.agenda-pill');
+      if (!pill) return;
+      container.querySelectorAll('.agenda-pill').forEach(function(p) { p.classList.remove('active'); });
+      pill.classList.add('active');
+      applyFn();
+    });
+  }
+
+  // ── Aplica filtros de Pre-agendamiento — función genérica por tabla
+  function applyAgendaPreTableFilters(tbodyId, searchId, desdeId, hastaId, pillsId) {
+    var search = (document.getElementById(searchId) || {}).value || '';
+    var desde  = (document.getElementById(desdeId)  || {}).value || '';
+    var hasta  = (document.getElementById(hastaId)  || {}).value || '';
+    var pill   = document.querySelector('#' + pillsId + ' .agenda-pill.active');
+    var status = pill ? pill.getAttribute('data-agenda-status') : 'todos';
+    var q      = search.toLowerCase().trim();
+
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.querySelectorAll('.agenda-pre-row').forEach(function(row) {
+      var d          = row.dataset;
+      var fn         = d.fechaNorm || '';
+      var matchSearch = !q ||
+        (d.id       || '').toLowerCase().indexOf(q) !== -1 ||
+        (d.cuij     || '').toLowerCase().indexOf(q) !== -1 ||
+        (d.caratula || '').toLowerCase().indexOf(q) !== -1;
+      var matchStatus = status === 'todos' || (d.estado || '').trim().toLowerCase() === status;
+      var matchFecha  = true;
+      if (desde && fn) matchFecha = fn >= desde;
+      if (matchFecha && hasta && fn) matchFecha = fn <= hasta;
+      row.style.display = (matchSearch && matchStatus && matchFecha) ? '' : 'none';
+    });
+  }
+
+  function applyAgendaPreSolFilters() {
+    applyAgendaPreTableFilters(
+      'agenda-list-pre-solicitudes',
+      'agenda-pre-sol-search', 'agenda-pre-sol-desde', 'agenda-pre-sol-hasta', 'agenda-pre-sol-pills'
+    );
+  }
+
+  function applyAgendaPreEscFilters() {
+    applyAgendaPreTableFilters(
+      'agenda-list-pre-escritos',
+      'agenda-pre-esc-search', 'agenda-pre-esc-desde', 'agenda-pre-esc-hasta', 'agenda-pre-esc-pills'
+    );
+  }
+
+  // Wrapper para apply inicial de ambas tablas Pre
+  function applyAgendaPreFilters() {
+    applyAgendaPreSolFilters();
+    applyAgendaPreEscFilters();
+  }
+
+  // ── Aplica filtros de Agendamiento — función genérica por tabla
+  function applyAgendaAgTableFilters(tbodyId, searchId, desdeId, hastaId, pillsId) {
+    var search = (document.getElementById(searchId) || {}).value || '';
+    var desde  = (document.getElementById(desdeId)  || {}).value || '';
+    var hasta  = (document.getElementById(hastaId)  || {}).value || '';
+    var pill   = document.querySelector('#' + pillsId + ' .agenda-pill.active');
+    var status = pill ? pill.getAttribute('data-agenda-status') : 'todos';
+    var q      = search.toLowerCase().trim();
+
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    tbody.querySelectorAll('.agenda-ag-row').forEach(function(row) {
+      var d           = row.dataset;
+      var fn          = d.fechaNorm || '';
+      var matchSearch = !q ||
+        (d.id       || '').toLowerCase().indexOf(q) !== -1 ||
+        (d.cuij     || '').toLowerCase().indexOf(q) !== -1 ||
+        (d.caratula || '').toLowerCase().indexOf(q) !== -1;
+      var matchStatus = status === 'todos' || (d.estado || '').trim().toLowerCase() === status;
+      var matchFecha  = true;
+      if (desde && fn) matchFecha = fn >= desde;
+      if (matchFecha && hasta && fn) matchFecha = fn <= hasta;
+      row.style.display = (matchSearch && matchStatus && matchFecha) ? '' : 'none';
+    });
+  }
+
+  function applyAgendaAgSolFilters() {
+    applyAgendaAgTableFilters(
+      'agenda-list-ag-solicitudes',
+      'agenda-ag-sol-search', 'agenda-ag-sol-desde', 'agenda-ag-sol-hasta', 'agenda-ag-sol-pills'
+    );
+  }
+
+  function applyAgendaAgEscFilters() {
+    applyAgendaAgTableFilters(
+      'agenda-list-ag-escritos',
+      'agenda-ag-esc-search', 'agenda-ag-esc-desde', 'agenda-ag-esc-hasta', 'agenda-ag-esc-pills'
+    );
+  }
+
+  // Wrapper para apply inicial de ambas tablas Ag
+  function applyAgendaAgFilters() {
+    applyAgendaAgSolFilters();
+    applyAgendaAgEscFilters();
+  }
+
+  // ── Drawer: populate
+  function populateAgendaDrawer(row) {
+    var d         = row.dataset;
+    var tipo      = d.tipo || '';
+    var tipoBg    = tipo === 'escrito'  ? '#fef3c7' : '#dbeafe';
+    var tipoTxt   = tipo === 'escrito'  ? '#92400e' : '#1e40af';
+    var tipoLabel = tipo === 'escrito'  ? 'Escrito'  : 'Solicitud';
+
+    document.getElementById('agenda-drawer-id').textContent = d.id || '—';
+    document.getElementById('agenda-drawer-tipo-badge').innerHTML =
+      '<span class="badge" style="background:' + tipoBg + ';color:' + tipoTxt + ';">' + tipoLabel + '</span>';
+
+    var set = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+
+    // Identificación
+    set('agenda-dd-cuij',     d.cuij);
+    set('agenda-dd-caratula', d.caratula);
+
+    // Audiencia
+    set('agenda-dd-tipo-aud', d.tipoAud);
+    set('agenda-dd-sala',     d.sala);
+    set('agenda-dd-fecha',    d.fecha   ? (d.fecha + (d.hora ? '  ·  ' + d.hora : '')) : '—');
+
+    var zoomEl = document.getElementById('agenda-dd-zoom');
+    if (zoomEl) {
+      if (d.zoom) {
+        zoomEl.innerHTML = '<a href="' + esc(d.zoom) + '" target="_blank" rel="noopener" class="agenda-zoom-link-drawer">Abrir reunión ↗</a>';
+      } else {
+        zoomEl.textContent = '—';
+      }
+    }
+
+    // Integrantes
+    set('agenda-dd-juez',     d.juez);
+    set('agenda-dd-fiscal',   d.fiscal);
+    set('agenda-dd-defensa',  d.defensa);
+    set('agenda-dd-querella', d.querella);
+    var eiSection = document.getElementById('agenda-dd-ei-section');
+    if (eiSection) eiSection.style.display = (d.ei === 'true') ? '' : 'none';
+
+    // Estado badge
+    var cancelada  = d.cancelada   === 'true';
+    var reSorteada = d.reSorteada  === 'true';
+    var agendada   = d.agendada    === 'true';
+    var estadoLabel, estadoBg, estadoTxt;
+    if      (cancelada)  { estadoLabel = 'Cancelada';   estadoBg = '#fee2e2'; estadoTxt = '#991b1b'; }
+    else if (reSorteada) { estadoLabel = 'Re sorteada'; estadoBg = '#fef3c7'; estadoTxt = '#92400e'; }
+    else if (agendada)   { estadoLabel = 'Agendada';    estadoBg = '#d1fae5'; estadoTxt = '#065f46'; }
+    else                 { estadoLabel = 'Pendiente';   estadoBg = '#f1f5f9'; estadoTxt = '#64748b'; }
+    var estadoEl = document.getElementById('agenda-dd-estado-badge');
+    if (estadoEl) estadoEl.innerHTML = '<span class="badge" style="background:' + estadoBg + ';color:' + estadoTxt + ';">' + estadoLabel + '</span>';
+
+    // Cancelación (condicional)
+    var canSection = document.getElementById('agenda-dd-cancelacion-section');
+    if (canSection) {
+      canSection.style.display = cancelada ? '' : 'none';
+      if (cancelada) {
+        set('agenda-dd-motivo-can',  d.motivoCan);
+        set('agenda-dd-usuario-can', d.usuarioCan);
+      }
+    }
+
+    // Re sorteo (condicional)
+    var resSection = document.getElementById('agenda-dd-resorteo-section');
+    if (resSection) {
+      resSection.style.display = reSorteada ? '' : 'none';
+      if (reSorteada) {
+        set('agenda-dd-motivo-res',  d.motivoRes);
+        set('agenda-dd-usuario-res', d.usuarioRes);
+      }
+    }
+  }
+
+  function openAgendaDrawer(row) {
+    populateAgendaDrawer(row);
+    document.getElementById('agenda-drawer').classList.add('open');
+    document.getElementById('agenda-overlay').classList.add('open');
+  }
+
+  function closeAgendaDrawer() {
+    document.getElementById('agenda-drawer').classList.remove('open');
+    document.getElementById('agenda-overlay').classList.remove('open');
+  }
+
+  function initAgendaDrawer() {
+    ['agenda-list-ag-escritos', 'agenda-list-ag-solicitudes'].forEach(function(id) {
+      var tbody = document.getElementById(id);
+      if (!tbody) return;
+      tbody.addEventListener('click', function(e) {
+        // No abrir drawer si el click fue en el link de zoom
+        if (e.target.closest('.agenda-zoom-link')) return;
+        var row = e.target.closest('.agenda-ag-clickable');
+        if (row) openAgendaDrawer(row);
+      });
+    });
+    var closeBtn = document.getElementById('agenda-drawer-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeAgendaDrawer);
+    var overlay = document.getElementById('agenda-overlay');
+    if (overlay) overlay.addEventListener('click', closeAgendaDrawer);
+  }
+
+  // ── Init filtros (se ejecuta una sola vez)
+  function initAgendaFilters() {
+    var hoy = getHoy();
+
+    // Pre — Solicitudes (filtros propios)
+    var preSolDesde  = document.getElementById('agenda-pre-sol-desde');
+    var preSolHasta  = document.getElementById('agenda-pre-sol-hasta');
+    var preSolSearch = document.getElementById('agenda-pre-sol-search');
+    var preSolBtnHoy = document.getElementById('agenda-pre-sol-hoy');
+    if (preSolDesde) preSolDesde.value = hoy;
+    if (preSolHasta) preSolHasta.value = hoy;
+    if (preSolSearch) preSolSearch.addEventListener('input',  applyAgendaPreSolFilters);
+    if (preSolDesde)  preSolDesde.addEventListener('change',  applyAgendaPreSolFilters);
+    if (preSolHasta)  preSolHasta.addEventListener('change',  applyAgendaPreSolFilters);
+    if (preSolBtnHoy) preSolBtnHoy.addEventListener('click', function() {
+      var h = getHoy();
+      if (preSolDesde) preSolDesde.value = h;
+      if (preSolHasta) preSolHasta.value = h;
+      applyAgendaPreSolFilters();
+    });
+
+    // Pre — Escritos (filtros propios)
+    var preEscDesde  = document.getElementById('agenda-pre-esc-desde');
+    var preEscHasta  = document.getElementById('agenda-pre-esc-hasta');
+    var preEscSearch = document.getElementById('agenda-pre-esc-search');
+    var preEscBtnHoy = document.getElementById('agenda-pre-esc-hoy');
+    if (preEscDesde) preEscDesde.value = hoy;
+    if (preEscHasta) preEscHasta.value = hoy;
+    if (preEscSearch) preEscSearch.addEventListener('input',  applyAgendaPreEscFilters);
+    if (preEscDesde)  preEscDesde.addEventListener('change',  applyAgendaPreEscFilters);
+    if (preEscHasta)  preEscHasta.addEventListener('change',  applyAgendaPreEscFilters);
+    if (preEscBtnHoy) preEscBtnHoy.addEventListener('click', function() {
+      var h = getHoy();
+      if (preEscDesde) preEscDesde.value = h;
+      if (preEscHasta) preEscHasta.value = h;
+      applyAgendaPreEscFilters();
+    });
+
+    // Ag — Solicitudes (filtros propios — sin fecha inicial, muestra todo)
+    var agSolDesde  = document.getElementById('agenda-ag-sol-desde');
+    var agSolHasta  = document.getElementById('agenda-ag-sol-hasta');
+    var agSolSearch = document.getElementById('agenda-ag-sol-search');
+    var agSolBtnHoy = document.getElementById('agenda-ag-sol-hoy');
+    if (agSolSearch) agSolSearch.addEventListener('input',  applyAgendaAgSolFilters);
+    if (agSolDesde)  agSolDesde.addEventListener('change',  applyAgendaAgSolFilters);
+    if (agSolHasta)  agSolHasta.addEventListener('change',  applyAgendaAgSolFilters);
+    if (agSolBtnHoy) agSolBtnHoy.addEventListener('click', function() {
+      var h = getHoy();
+      if (agSolDesde) agSolDesde.value = h;
+      if (agSolHasta) agSolHasta.value = h;
+      applyAgendaAgSolFilters();
+    });
+
+    // Ag — Escritos (filtros propios — sin fecha inicial, muestra todo)
+    var agEscDesde  = document.getElementById('agenda-ag-esc-desde');
+    var agEscHasta  = document.getElementById('agenda-ag-esc-hasta');
+    var agEscSearch = document.getElementById('agenda-ag-esc-search');
+    var agEscBtnHoy = document.getElementById('agenda-ag-esc-hoy');
+    if (agEscSearch) agEscSearch.addEventListener('input',  applyAgendaAgEscFilters);
+    if (agEscDesde)  agEscDesde.addEventListener('change',  applyAgendaAgEscFilters);
+    if (agEscHasta)  agEscHasta.addEventListener('change',  applyAgendaAgEscFilters);
+    if (agEscBtnHoy) agEscBtnHoy.addEventListener('click', function() {
+      var h = getHoy();
+      if (agEscDesde) agEscDesde.value = h;
+      if (agEscHasta) agEscHasta.value = h;
+      applyAgendaAgEscFilters();
+    });
+  }
+
+  // ── Tab switcher
+  function initAgendaTabs() {
+    var tabs = document.querySelectorAll('.agenda-tab[data-agenda-tab]');
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var target = tab.getAttribute('data-agenda-tab');
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        document.querySelectorAll('.agenda-tab-panel').forEach(function(panel) {
+          panel.style.display = (panel.id === 'agenda-panel-' + target) ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  // ── Carga de datos — MOCK (para testing drawer)
+  function initAgendaData() {
+    ['agenda-list-pre-escritos', 'agenda-list-pre-solicitudes'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<tr><td colspan="4" class="agenda-loading">Cargando...</td></tr>';
+    });
+    ['agenda-list-ag-escritos', 'agenda-list-ag-solicitudes'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<tr><td colspan="9" class="agenda-loading">Cargando...</td></tr>';
+    });
+
+    // Simular delay de red
+    setTimeout(function() {
+      var data = _agendaMockData;
+
+      renderAgendaPreTable('agenda-list-pre-escritos',    'agenda-count-pre-escritos',    data.preEscritos);
+      renderAgendaPreTable('agenda-list-pre-solicitudes', 'agenda-count-pre-solicitudes', data.preSolicitudes);
+      renderAgendaAgTable( 'agenda-list-ag-escritos',     'agenda-count-ag-escritos',     data.agEscritos,    'escrito');
+      renderAgendaAgTable( 'agenda-list-ag-solicitudes',  'agenda-count-ag-solicitudes',  data.agSolicitudes, 'solicitud');
+
+      // Pills dinámicas Pre
+      buildAgendaPills('agenda-pre-sol-pills', data.preSolicitudes || [], applyAgendaPreSolFilters);
+      buildAgendaPills('agenda-pre-esc-pills', data.preEscritos    || [], applyAgendaPreEscFilters);
+
+      // Pills dinámicas Ag
+      buildAgendaPills('agenda-ag-sol-pills', data.agSolicitudes || [], applyAgendaAgSolFilters);
+      buildAgendaPills('agenda-ag-esc-pills', data.agEscritos    || [], applyAgendaAgEscFilters);
+
+      // Aplicar filtros iniciales (respeta rango de fecha ya seteado)
+      applyAgendaPreFilters();
+      applyAgendaAgFilters();
+    }, 500);
+  }
+
+  // Punto de entrada — llamado desde navigateTo('agenda')
+  window.initAgendaModule = function() {
+    if (!_agendaInitialized) {
+      _agendaInitialized = true;
+      initAgendaTabs();
+      initAgendaFilters();
+      initAgendaDrawer();
+    }
+    initAgendaData();
+  };
 })();
 </script>
 </body>

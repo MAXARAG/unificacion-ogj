@@ -20,15 +20,22 @@ function include(filename) {
 }
 
 // ─── SHEET CONFIG ────────────────────────────────────────────────
-var SPREADSHEET_ID = '1o0ihdTyFvqKp_TaVEtwedUScPOGZtZyJZPFoVUartA8';
-var HOJA_ESCRITOS  = '.ESCRITOS';
-var HOJA_SOLICITUDES = '.SOLICITUDES';
+var SPREADSHEET_ID = '197EOO8Sw_RYmknEyIrQ8WcBUGHR5IIYQmemqcJyeE4A';
+var HOJA_ESCRITOS      = '.ESCRITOS';
+var HOJA_SOLICITUDES   = '.SOLICITUDES';
+
+// Hojas del módulo Agenda (ya existen en el Sheet)
+var HOJA_ESC_PENDIENTES = 'ESC_PENDIENTES';
+var HOJA_SOL_PENDIENTES = 'SOL_PENDIENTES';
+var HOJA_ESC_AGENDADOS  = 'ESC_AGENDADOS';
+var HOJA_SOL_AGENDADOS  = 'SOL_AGENDADOS';
 
 /**
  * Lee toda la hoja .ESCRITOS y devuelve escritos + estados únicos + destinos únicos.
- * Columnas: A(usuario) B(id) C(fecha) D(hora) E(origen) F(cuij) G(caratula)
- *           H(tipoRemitente) K(tipoObjeto) L(usuarioEjecuta) M(tramite)
- *           N(destino) O(estado) P(obs) Q(timestamps)
+ * Columnas reales: A:USUARIO, B:ID, C:FECHA INGRESO, D:HORA INGRESO, E:ORIGEN, F:CUIJ, G:CARATULA,
+ *                 I:TIPO SOLICITANTE, K:TIPO SOLICITUD, L:INFO ADICIONAL, M:ESTADO LEGAJO,
+ *                 N:USUARIO TRAMITE, O:TRAMITE, P:DESTINO, Q:VIA, R:OBSERVACIONES, S:ESTADO, T:TIMESTAMP TRAMITE
+ * (H:SOLICITANTE se omite)
  */
 function getEscritosData() {
   try {
@@ -40,8 +47,8 @@ function getEscritosData() {
       return { escritos: [], estados: ['Pendientes', 'Finalizada'], destinos: [] };
     }
 
-    // Fila 2 en adelante, columnas A:Q (17 cols)
-    var raw = sheet.getRange(2, 1, lastRow - 1, 17).getDisplayValues();
+    // Columnas A:T (20 cols) - se salta H (posición 8)
+    var raw = sheet.getRange(2, 1, lastRow - 1, 20).getDisplayValues();
 
     var estadosSet  = [];
     var destinosSet = [];
@@ -49,21 +56,25 @@ function getEscritosData() {
     var escritos = raw
       .map(function(row) {
         return {
-          usuario:       row[0],   // A
-          id:            row[1],   // B
-          fecha:         row[2],   // C
-          hora:          row[3],   // D
-          origen:        row[4],   // E
-          cuij:          row[5],   // F
-          caratula:      row[6],   // G
-          tipoRemitente: row[7],   // H
-          tipoObjeto:    row[10],  // K
-          usuarioEjecuta:row[11],  // L
-          tramite:       row[12],  // M
-          destino:       row[13],  // N
-          estado:        row[14],  // O
-          obs:           row[15],  // P
-          timestamps:    row[16]   // Q
+          usuario:           row[0],   // A - USUARIO
+          id:                row[1],   // B - ID
+          fecha:             row[2],   // C - FECHA INGRESO
+          hora:              row[3],   // D - HORA INGRESO
+          origen:            row[4],   // E - ORIGEN
+          cuij:              row[5],   // F - CUIJ
+          caratula:          row[6],   // G - CARATULA
+          // H - SOLICITANTE (omitido)
+          tipoSolicitante:   row[8],   // I - TIPO SOLICITANTE
+          tipoSolicitud:     row[10],  // K - TIPO SOLICITUD
+          infoAdicional:     row[11],  // L - INFO ADICIONAL
+          estadoLegajo:      row[12],  // M - ESTADO LEGAJO
+          usuarioTramite:    row[13],  // N - USUARIO TRAMITE
+          tramite:           row[14],  // O - TRAMITE
+          destino:           row[15],  // P - DESTINO
+          via:               row[16],  // Q - VIA
+          obs:               row[17],  // R - OBSERVACIONES
+          estado:            row[18],  // S - ESTADO
+          timestampTramite:  row[19]   // T - TIMESTAMP TRAMITE
         };
       })
       .filter(function(e) { return e.id && e.id.trim(); }); // omite filas vacías
@@ -76,7 +87,7 @@ function getEscritosData() {
 
     if (estadosSet.length === 0) estadosSet = ['Pendientes', 'Finalizada'];
 
-return { escritos: escritos, estados: estadosSet, destinos: destinosSet };
+    return { escritos: escritos, estados: estadosSet, destinos: destinosSet };
   } catch(err) {
     return { error: err.message, escritos: [], estados: ['Pendientes', 'Finalizada'], destinos: [] };
   }
@@ -123,7 +134,93 @@ function getSolicitudesData() {
   }
 }
 
-// ─── MOCK DATA ───────────────────────────────────────────────────
+// Devuelve el conteo de items pendientes para el sidebar
+function getPendingCounts() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    // Conteo de escritos pendientes
+    var sheetEscritos = ss.getSheetByName(HOJA_ESCRITOS);
+    var escritosPendientes = 0;
+    if (sheetEscritos && sheetEscritos.getLastRow() > 1) {
+      var estadoCol = 15; // Columna O (estado)
+      var data = sheetEscritos.getRange(2, estadoCol, sheetEscritos.getLastRow() - 1, 1).getDisplayValues();
+      data.forEach(function(row) {
+        var est = (row[0] || '').trim().toLowerCase();
+        if (est === 'pendientes') {
+          escritosPendientes++;
+        }
+      });
+    }
+    
+    // Conteo de solicitudes pendientes
+    var sheetSolicitudes = ss.getSheetByName(HOJA_SOLICITUDES);
+    var solicitudesPendientes = 0;
+    if (sheetSolicitudes && sheetSolicitudes.getLastRow() > 1) {
+      var estadoColS = 8; // Columna H (estado)
+      var dataS = sheetSolicitudes.getRange(2, estadoColS, sheetSolicitudes.getLastRow() - 1, 1).getDisplayValues();
+      dataS.forEach(function(row) {
+        var est = (row[0] || '').trim().toLowerCase();
+        if (est === 'pendiente') {
+          solicitudesPendientes++;
+        }
+      });
+    }
+    
+    return {
+      escritos: escritosPendientes,
+      solicitudes: solicitudesPendientes,
+      total: escritosPendientes + solicitudesPendientes
+    };
+  } catch(err) {
+    return { error: err.message, escritos: 0, solicitudes: 0, total: 0 };
+  }
+}
+
+// Lee las 4 hojas del módulo Agenda directamente
+function getAgendaData() {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    // Helper: leer una hoja y devolver array de objetos
+    function leerHoja(nombreHoja, tipoItem) {
+      var sheet = ss.getSheetByName(nombreHoja);
+      if (!sheet || sheet.getLastRow() <= 1) return [];
+      
+      var lastCol = sheet.getLastColumn();
+      var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastCol).getDisplayValues();
+      
+      return data.map(function(row) {
+        // Ajustar según las columnas reales de cada hoja
+        // Suponiendo: A=ID, B=Fecha, C=Hora, D=CUIJ, E=Carátula, F=Estado
+        return {
+          tipo:      tipoItem,
+          id:        row[0] || '',
+          fecha:     row[1] || '',
+          hora:      row[2] || '',
+          cuij:      row[3] || '',
+          caratula:  row[4] || '',
+          estado:    row[5] || '',
+          rowIndex:  0 // No necesario para solo lectura
+        };
+      }).filter(function(item) { return item.id && item.id.trim(); });
+    }
+
+    var preEscritos    = leerHoja(HOJA_ESC_PENDIENTES,    'escrito');
+    var preSolicitudes = leerHoja(HOJA_SOL_PENDIENTES,     'solicitud');
+    var agEscritos     = leerHoja(HOJA_ESC_AGENDADOS,     'escrito');
+    var agSolicitudes  = leerHoja(HOJA_SOL_AGENDADOS,      'solicitud');
+
+    return {
+      preEscritos:    preEscritos,
+      preSolicitudes: preSolicitudes,
+      agEscritos:     agEscritos,
+      agSolicitudes:  agSolicitudes
+    };
+  } catch(err) {
+    return { error: err.message, preEscritos: [], preSolicitudes: [], agEscritos: [], agSolicitudes: [] };
+  }
+}
 
 function getDashboardData() {
   return {
@@ -160,15 +257,6 @@ function getMesaEntradasData() {
   };
 }
 
-function getAgendaData() {
-  return [
-    { fecha: '14/04/2024', hora: '09:00', evento: 'Audiencia preliminar',    expediente: '2024-0312', responsable: 'Juez Fernández' },
-    { fecha: '14/04/2024', hora: '11:30', evento: 'Vencimiento de plazo',    expediente: '2024-0388', responsable: 'Sec. López' },
-    { fecha: '15/04/2024', hora: '09:00', evento: 'Audiencia oral',          expediente: '2024-0451', responsable: 'Juez Fernández' },
-    { fecha: '16/04/2024', hora: '10:00', evento: 'Dictado de sentencia',    expediente: '2024-0280', responsable: 'Juez Castro' },
-    { fecha: '17/04/2024', hora: '15:00', evento: 'Pericia psicológica',     expediente: '2024-0499', responsable: 'Perito Gómez' }
-  ];
-}
 
 function getNotificacionesData() {
   return [
